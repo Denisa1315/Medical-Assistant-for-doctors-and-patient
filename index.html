@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Medical Assistant - Static Questions Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .patient-id-box {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.1em;
+            color: #155724;
+            font-weight: 600;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #28a745;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #218838;
+        }
+
+        .btn-stop {
+            background: #dc3545;
+            margin-top: 10px;
+        }
+
+        .btn-stop:hover {
+            background: #c82333;
+        }
+
+        .recording-indicator {
+            display: none;
+            text-align: center;
+            color: #dc3545;
+            font-weight: bold;
+            margin: 10px 0;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .report {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .speech-transcript {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            min-height: 60px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .chatbot-container {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chat-message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .chat-ai {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-user {
+            background: #d4edda;
+            color: #155724;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            border-top: 2px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input-container input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .chat-input-container button {
+            padding: 12px 24px;
+            width: auto;
+            border-radius: 8px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .language-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .lang-btn {
+            flex: 1;
+            padding: 10px;
+            background: #f0f0f0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .lang-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .progress-indicator {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 AI Medical Assistant</h1>
+        <p class="subtitle">10 Static Questions + Gemma3 Reports</p>
+
+        <!-- Patient ID Display -->
+        <div class="patient-id-box hidden" id="patientIdDisplay">
+            Patient ID: <strong id="displayedPatientId"></strong>
+        </div>
+
+        <!-- Login Section -->
+        <div class="section" id="loginSection">
+            <h2>Patient Login</h2>
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('register')">New Patient</button>
+                <button class="tab" onclick="switchTab('login')">Existing Patient</button>
+            </div>
+
+            <div id="register" class="tab-content active">
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <input type="text" id="regName" placeholder="Enter your name">
+                </div>
+                <div class="input-group">
+                    <label>Date of Birth (DD-MM-YYYY)</label>
+                    <input type="text" id="regDob" placeholder="e.g., 15-05-1990">
+                </div>
+                <div class="input-group">
+                    <label>Age</label>
+                    <input type="number" id="regAge" placeholder="Your age">
+                </div>
+                <div class="input-group">
+                    <label>Sex</label>
+                    <select id="regSex">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Contact</label>
+                    <input type="tel" id="regContact" placeholder="+91 1234567890">
+                </div>
+                <div class="input-group">
+                    <label>Address</label>
+                    <textarea id="regAddress" placeholder="Your address"></textarea>
+                </div>
+                <button class="btn" onclick="registerPatient()">Register</button>
+            </div>
+
+            <div id="login" class="tab-content">
+                <div class="input-group">
+                    <label>Patient ID</label>
+                    <input type="text" id="loginId" placeholder="Enter your Patient ID">
+                </div>
+                <button class="btn" onclick="loginPatient()">Login</button>
+            </div>
+        </div>
+
+        <!-- Symptoms Section -->
+        <div class="section hidden" id="symptomsSection">
+            <h2>Describe Your Symptoms</h2>
+            
+            <div class="language-selector">
+                <button class="lang-btn active" onclick="selectLanguage('en')">English</button>
+                <button class="lang-btn" onclick="selectLanguage('hi')">हिंदी</button>
+                <button class="lang-btn" onclick="selectLanguage('ta')">தமிழ்</button>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchInputTab('voice')">🎤 Voice</button>
+                <button class="tab" onclick="switchInputTab('text')">✍️ Text</button>
+            </div>
+
+            <div id="voiceInput" class="tab-content active">
+                <p style="color: #666; margin-bottom: 15px;">Speak your symptoms</p>
+                <button class="btn" id="speechBtn" onclick="startSpeechRecognition()">🎤 Start</button>
+                <button class="btn btn-stop hidden" id="speechStopBtn" onclick="stopSpeechRecognition()">⏹️ Stop</button>
+                <div class="recording-indicator" id="speechIndicator">● Listening...</div>
+                <div id="speechTranscriptBox" class="hidden">
+                    <label>You said:</label>
+                    <div class="speech-transcript" id="speechTranscript"></div>
+                    <button class="btn btn-secondary" onclick="useSpeechTranscript()">✅ Use This</button>
+                </div>
+            </div>
+
+            <div id="textInput" class="tab-content">
+                <textarea id="symptomsText" placeholder="Type your symptoms..."></textarea>
+                <button class="btn" onclick="submitText()">Submit</button>
+            </div>
+
+            <div id="transcriptionBox" class="hidden">
+                <label>Your Symptoms:</label>
+                <div class="report" id="transcription"></div>
+                <button class="btn btn-secondary" onclick="analyzeSymptoms()">▶️ Start 10-Question Consultation</button>
+            </div>
+        </div>
+
+        <!-- Chatbot Section -->
+        <div class="section hidden" id="chatbotSection">
+            <h2>💬 Doctor Consultation</h2>
+            <div class="progress-indicator" id="progressIndicator">Loading 10 static questions...</div>
+            
+            <div class="chatbot-container">
+                <div class="chatbot-messages" id="chatMessages"></div>
+                <div class="chat-input-container" id="chatInputContainer">
+                    <input type="text" id="chatInput" placeholder="Type your answer..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                    <button class="btn" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary hidden" id="finishBtn" onclick="generateReport()">Generate Report</button>
+        </div>
+
+        <!-- Report Section -->
+        <div class="section hidden" id="reportSection">
+            <h2>📋 Health Assessment Report</h2>
+            <div class="report" id="reportContent"></div>
+        </div>
+
+        <div id="statusMsg"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let currentPatientId = null;
+        let currentLanguage = 'en';
+        let currentSymptoms = null;
+        let conversationHistory = [];
+        let totalQuestions = 10;
+        let currentQuestionIndex = 0;
+        let speechRecognition = null;
+        let speechFinalTranscript = '';
+
+        function switchTab(tab) {
+            document.querySelectorAll('#loginSection .tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#loginSection .tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab).classList.add('active');
+        }
+
+        function switchInputTab(tab) {
+            document.querySelectorAll('#symptomsSection .tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#symptomsSection .tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Input').classList.add('active');
+        }
+
+        function selectLanguage(lang) {
+            currentLanguage = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            showStatus(`Language: ${lang === 'en' ? 'English' : lang === 'hi' ? 'Hindi' : 'Tamil'}`, 'info');
+        }
+
+        function showStatus(message, type) {
+            const statusMsg = document.getElementById('statusMsg');
+            statusMsg.className = `status ${type}`;
+            statusMsg.textContent = message;
+            statusMsg.style.display = 'block';
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => statusMsg.style.display = 'none', 3000);
+            }
+        }
+
+        // Speech Recognition
+        function startSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                showStatus('❌ Not supported', 'error');
+                return;
+            }
+            speechRecognition = new SpeechRecognition();
+            speechRecognition.lang = currentLanguage === 'hi' ? 'hi-IN' : currentLanguage === 'ta' ? 'ta-IN' : 'en-US';
+            speechRecognition.continuous = true;
+            speechRecognition.interimResults = true;
+            speechFinalTranscript = '';
+
+            speechRecognition.onstart = () => {
+                document.getElementById('speechIndicator').style.display = 'block';
+                document.getElementById('speechBtn').classList.add('hidden');
+                document.getElementById('speechStopBtn').classList.remove('hidden');
+            };
+
+            speechRecognition.onresult = (event) => {
+                let interim = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        speechFinalTranscript += event.results[i][0].transcript + ' ';
+                    } else {
+                        interim += event.results[i][0].transcript;
+                    }
+                }
+                document.getElementById('speechTranscript').textContent = (speechFinalTranscript + interim).trim();
+                document.getElementById('speechTranscriptBox').classList.remove('hidden');
+            };
+
+            speechRecognition.onerror = () => {
+                showStatus('❌ Error', 'error');
+                resetSpeechUI();
+            };
+
+            speechRecognition.onend = resetSpeechUI;
+            speechRecognition.start();
+        }
+
+        function stopSpeechRecognition() {
+            if (speechRecognition) speechRecognition.stop();
+        }
+
+        function resetSpeechUI() {
+            document.getElementById('speechIndicator').style.display = 'none';
+            document.getElementById('speechBtn').classList.remove('hidden');
+            document.getElementById('speechStopBtn').classList.add('hidden');
+        }
+
+        function useSpeechTranscript() {
+            document.getElementById('transcription').textContent = speechFinalTranscript.trim();
+            document.getElementById('transcriptionBox').classList.remove('hidden');
+        }
+
+        // Patient Management
+        async function registerPatient() {
+            const dobInput = document.getElementById('regDob').value.trim();
+            let dob = dobInput;
+            if (dobInput.includes('-')) {
+                const parts = dobInput.split('-');
+                if (parts.length === 3) dob = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            
+            const formData = new FormData();
+            formData.append('name', document.getElementById('regName').value);
+            formData.append('dob', dob);
+            formData.append('age', document.getElementById('regAge').value);
+            formData.append('sex', document.getElementById('regSex').value);
+            formData.append('contact', document.getElementById('regContact').value);
+            formData.append('address', document.getElementById('regAddress').value);
+
+            try {
+                const response = await fetch(`${API_URL}/register-patient`, { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentPatientId = data.patient_id;
+                    document.getElementById('displayedPatientId').textContent = data.patient_id;
+                    document.getElementById('patientIdDisplay').classList.remove('hidden');
+                    showStatus(`✅ Registered! ID: ${data.patient_id}`, 'success');
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('symptomsSection').classList.remove('hidden');
+                }
+            } catch (error) {
+                showStatus('❌ Connection error', 'error');
+            }
+        }
+
+        async function loginPatient() {
+            const formData = new FormData();
+            formData.append('patient_id', document.getElementById('loginId').value);
+
+            try {
+                const response = await fetch(`${API_URL}/patient-login`, { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentPatientId = document.getElementById('loginId').value;
+                    document.getElementById('displayedPatientId').textContent = currentPatientId;
+                    document.getElementById('patientIdDisplay').classList.remove('hidden');
+                    showStatus('✅ Welcome back!', 'success');
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('symptomsSection').classList.remove('hidden');
+                }
+            } catch (error) {
+                showStatus('❌ Login failed', 'error');
+            }
+        }
+
+        async function submitText() {
+            const text = document.getElementById('symptomsText').value;
+            if (!text.trim()) {
+                showStatus('❌ Enter symptoms', 'error');
+                return;
+            }
+            document.getElementById('transcription').textContent = text;
+            document.getElementById('transcriptionBox').classList.remove('hidden');
+        }
+
+        // FIXED: Get 10 static questions and display as forms
+        async function analyzeSymptoms() {
+            const symptomsText = document.getElementById('transcription').textContent;
+            
+            showStatus('🔄 Loading 10 static questions...', 'info');
+
+            try {
+                const formData = new FormData();
+                formData.append('symptoms_text', symptomsText);
+                formData.append('patient_id', currentPatientId);
+                
+                const response = await fetch(`${API_URL}/test-with-text`, { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentSymptoms = data.symptoms;
+                    
+                    // Display all 10 questions at once
+                    displayQuestionsAsForm(data.questions);
+                    
+                    document.getElementById('symptomsSection').classList.add('hidden');
+                    document.getElementById('chatbotSection').classList.remove('hidden');
+                    showStatus('✅ 10 questions loaded!', 'success');
+                } else {
+                    showStatus('❌ Failed to load questions', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('❌ Connection error', 'error');
+            }
+        }
+
+        // Translated questions for each language
+        const QUESTIONS_TRANSLATIONS = {
+            en: [
+                "How long have you been experiencing these symptoms?",
+                "On a scale of 1-10, how severe are your symptoms?",
+                "When did the symptoms first start (date/time)?",
+                "Do the symptoms come and go, or are they constant?",
+                "Have you experienced this before?",
+                "Have you taken any medication for this? If yes, which ones?",
+                "Does anything make the symptoms better or worse?",
+                "Do you have any other symptoms you haven't mentioned?",
+                "How does this affect your daily activities (work, sleep, exercise)?",
+                "Have you noticed any recent changes in your health or lifestyle?"
+            ],
+            hi: [
+                "आपको ये लक्षण कब से महसूस हो रहे हैं?",
+                "1 से 10 के पैमाने पर, आपके लक्षण कितने गंभीर हैं?",
+                "लक्षण कब शुरू हुए (तारीख/समय)?",
+                "क्या लक्षण आते-जाते रहते हैं या लगातार रहते हैं?",
+                "क्या आपने पहले भी ऐसा अनुभव किया है?",
+                "क्या आपने इसके लिए कोई दवाई ली है? अगर हाँ, तो कौन सी?",
+                "क्या कोई चीज़ लक्षणों को बेहतर या बदतर बनाती है?",
+                "क्या आपको कोई और लक्षण हैं जो आपने नहीं बताए?",
+                "यह आपकी दैनिक गतिविधियों (काम, नींद, व्यायाम) को कैसे प्रभावित करता है?",
+                "क्या आपने अपने स्वास्थ्य या जीवनशैली में हाल में कोई बदलाव देखा है?"
+            ],
+            ta: [
+                "இந்த அறிகுறிகளை நீங்கள் எவ்வளவு காலமாக அனுபவித்து வருகிறீர்கள்?",
+                "1 முதல் 10 வரை, உங்கள் அறிகுறிகள் எவ்வளவு தீவிரமானவை?",
+                "அறிகுறிகள் எப்போது தொடங்கின (தேதி/நேரம்)?",
+                "அறிகுறிகள் வந்து போகின்றனவா அல்லது தொடர்ச்சியாக உள்ளனவா?",
+                "நீங்கள் இதை முன்பு அனுபவித்தீர்களா?",
+                "இதற்கு நீங்கள் ஏதேனும் மருந்து எடுத்தீர்களா? ஆம் என்றால், எந்த மருந்துகள்?",
+                "ஏதேனும் அறிகுறிகளை மேம்படுத்துகிறதா அல்லது மோசமாக்குகிறதா?",
+                "நீங்கள் குறிப்பிடாத வேறு அறிகுறிகள் உள்ளனவா?",
+                "இது உங்கள் அன்றாட செயல்பாடுகளை (வேலை, தூக்கம், உடற்பயிற்சி) எவ்வாறு பாதிக்கிறது?",
+                "உங்கள் உடல்நலம் அல்லது வாழ்க்கை முறையில் சமீபத்தில் ஏதேனும் மாற்றங்களைக் கண்டிருக்கிறீர்களா?"
+            ]
+        };
+
+        // Voice mode - questions one by one with speech
+        let currentQuestionVoice = 0;
+        let voiceAnswers = [];
+
+        // Display all questions as form inputs
+        function displayQuestionsAsForm(questions) {
+            // Get translated questions based on selected language
+            const translatedQuestions = QUESTIONS_TRANSLATIONS[currentLanguage] || QUESTIONS_TRANSLATIONS.en;
+            
+            // Check if voice mode was used for symptoms
+            const isVoiceMode = document.getElementById('speechTranscriptBox').classList.contains('hidden') === false;
+            
+            if (isVoiceMode) {
+                // VOICE MODE: Show questions one by one with voice input
+                displayVoiceQuestion(0, translatedQuestions);
+            } else {
+                // TEXT MODE: Show all questions as forms
+                displayTextQuestions(translatedQuestions);
+            }
+        }
+
+        function displayTextQuestions(questions) {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = '<h3 style="color: #667eea; margin-bottom: 20px;">Please answer the following 10 questions:</h3>';
+            
+            questions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.style.cssText = 'background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #667eea;';
+                questionDiv.innerHTML = `
+                    <label style="display: block; color: #667eea; font-weight: 600; margin-bottom: 8px;">
+                        <strong>Question ${index + 1}:</strong> ${q}
+                    </label>
+                    <textarea id="answer${index}" 
+                              style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 0.95em; min-height: 60px; font-family: inherit;"
+                              placeholder="Type your answer here..."></textarea>
+                `;
+                chatMessages.appendChild(questionDiv);
+            });
+            
+            // Hide chat input, show generate button
+            document.getElementById('chatInputContainer').classList.add('hidden');
+            document.getElementById('finishBtn').classList.remove('hidden');
+            document.getElementById('progressIndicator').textContent = 'Answer all 10 questions, then click "Generate Report"';
+        }
+
+        function displayVoiceQuestion(index, questions) {
+            if (index >= 10) {
+                // All questions answered
+                document.getElementById('chatInputContainer').classList.add('hidden');
+                document.getElementById('finishBtn').classList.remove('hidden');
+                document.getElementById('progressIndicator').textContent = 'Voice answers recorded! Click "Generate Report"';
+                return;
+            }
+
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = '';
+            
+            // Display current question
+            const questionDiv = document.createElement('div');
+            questionDiv.style.cssText = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;';
+            questionDiv.innerHTML = `
+                <h3 style="margin: 0 0 10px 0;">Question ${index + 1} of 10</h3>
+                <p style="font-size: 1.2em; margin: 0; line-height: 1.6;">${questions[index]}</p>
+            `;
+            chatMessages.appendChild(questionDiv);
+
+            // Voice input area
+            const voiceInputDiv = document.createElement('div');
+            voiceInputDiv.style.cssText = 'background: #f8f9fa; padding: 20px; border-radius: 12px; text-align: center;';
+            
+            // Create buttons programmatically to avoid escaping issues
+            const speakBtn = document.createElement('button');
+            speakBtn.className = 'btn';
+            speakBtn.style.marginBottom = '10px';
+            speakBtn.textContent = '🎤 Speak Your Answer';
+            speakBtn.onclick = () => startQuestionVoiceAnswer(index);
+            voiceInputDiv.appendChild(speakBtn);
+
+            const indicator = document.createElement('div');
+            indicator.id = `voiceAnswerIndicator${index}`;
+            indicator.className = 'recording-indicator';
+            indicator.textContent = '● Listening...';
+            voiceInputDiv.appendChild(indicator);
+
+            const answerTextDiv = document.createElement('div');
+            answerTextDiv.id = `voiceAnswerText${index}`;
+            answerTextDiv.style.cssText = 'background: white; border: 2px solid #667eea; border-radius: 8px; padding: 15px; margin-top: 15px; min-height: 80px; display: none;';
+            answerTextDiv.innerHTML = '<strong>You said:</strong><br><span id="voiceAnswerContent' + index + '" style="color: #155724; font-size: 1.1em;"></span>';
+            voiceInputDiv.appendChild(answerTextDiv);
+
+            const confirmBtn = document.createElement('button');
+            confirmBtn.id = `confirmAnswer${index}`;
+            confirmBtn.className = 'btn btn-secondary hidden';
+            confirmBtn.textContent = '✅ Confirm & Next Question';
+            confirmBtn.onclick = () => confirmVoiceAnswer(index, questions[index]);
+            voiceInputDiv.appendChild(confirmBtn);
+
+            const orText = document.createElement('p');
+            orText.style.cssText = 'margin-top: 15px; color: #666; font-size: 0.9em;';
+            orText.textContent = 'Or type your answer:';
+            voiceInputDiv.appendChild(orText);
+
+            const textArea = document.createElement('textarea');
+            textArea.id = `textAnswer${index}`;
+            textArea.style.cssText = 'width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; min-height: 60px; font-family: inherit;';
+            textArea.placeholder = 'Type here if you prefer...';
+            voiceInputDiv.appendChild(textArea);
+
+            const submitBtn = document.createElement('button');
+            submitBtn.className = 'btn btn-secondary';
+            submitBtn.textContent = 'Submit Text Answer';
+            submitBtn.onclick = () => submitTextAnswer(index, questions[index]);
+            voiceInputDiv.appendChild(submitBtn);
+
+            chatMessages.appendChild(voiceInputDiv);
+
+            document.getElementById('progressIndicator').textContent = `Question ${index + 1} of 10`;
+
+            // Auto-read question aloud in patient's language
+            speakQuestion(questions[index]);
+        }
+
+        function speakQuestion(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = currentLanguage === 'hi' ? 'hi-IN' : currentLanguage === 'ta' ? 'ta-IN' : 'en-US';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        let currentVoiceRecognition = null;
+        let currentVoiceAnswer = '';
+
+        function startQuestionVoiceAnswer(index) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                showStatus('❌ Voice not supported', 'error');
+                return;
+            }
+
+            currentVoiceRecognition = new SpeechRecognition();
+            currentVoiceRecognition.lang = currentLanguage === 'hi' ? 'hi-IN' : currentLanguage === 'ta' ? 'ta-IN' : 'en-US';
+            currentVoiceRecognition.continuous = true;
+            currentVoiceRecognition.interimResults = true;
+            currentVoiceAnswer = '';
+
+            currentVoiceRecognition.onstart = () => {
+                document.getElementById(`voiceAnswerIndicator${index}`).style.display = 'block';
+            };
+
+            currentVoiceRecognition.onresult = (event) => {
+                let interim = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        currentVoiceAnswer += event.results[i][0].transcript + ' ';
+                    } else {
+                        interim += event.results[i][0].transcript;
+                    }
+                }
+                const display = (currentVoiceAnswer + interim).trim();
+                document.getElementById(`voiceAnswerContent${index}`).textContent = display;
+                document.getElementById(`voiceAnswerText${index}`).style.display = 'block';
+                document.getElementById(`confirmAnswer${index}`).classList.remove('hidden');
+            };
+
+            currentVoiceRecognition.onerror = () => {
+                showStatus('❌ Voice error', 'error');
+                document.getElementById(`voiceAnswerIndicator${index}`).style.display = 'none';
+            };
+
+            currentVoiceRecognition.onend = () => {
+                document.getElementById(`voiceAnswerIndicator${index}`).style.display = 'none';
+            };
+
+            currentVoiceRecognition.start();
+            
+            // Auto-stop after 15 seconds
+            setTimeout(() => {
+                if (currentVoiceRecognition) {
+                    currentVoiceRecognition.stop();
+                }
+            }, 15000);
+        }
+
+        function confirmVoiceAnswer(index, question) {
+            if (currentVoiceRecognition) {
+                currentVoiceRecognition.stop();
+            }
+            
+            const answer = currentVoiceAnswer.trim() || 'No response';
+            voiceAnswers.push({ question, answer });
+            
+            // Move to next question
+            const translatedQuestions = QUESTIONS_TRANSLATIONS[currentLanguage] || QUESTIONS_TRANSLATIONS.en;
+            displayVoiceQuestion(index + 1, translatedQuestions);
+        }
+
+        function submitTextAnswer(index, question) {
+            const answer = document.getElementById(`textAnswer${index}`).value.trim() || 'No response';
+            voiceAnswers.push({ question, answer });
+            
+            // Move to next question
+            const translatedQuestions = QUESTIONS_TRANSLATIONS[currentLanguage] || QUESTIONS_TRANSLATIONS.en;
+            displayVoiceQuestion(index + 1, translatedQuestions);
+        }
+
+        async function generateReport() {
+            // Collect all answers from form OR voice answers
+            let answers = [];
+            
+            if (voiceAnswers.length === 10) {
+                // Voice mode - use voice answers
+                answers = voiceAnswers.map(qa => qa.answer);
+            } else {
+                // Text mode - collect from form
+                for (let i = 0; i < 10; i++) {
+                    const answerEl = document.getElementById(`answer${i}`);
+                    answers.push(answerEl ? answerEl.value || 'No response provided' : 'No response');
+                }
+            }
+            
+            const formData = new FormData();
+            formData.append('patient_id', currentPatientId);
+            formData.append('symptoms', JSON.stringify(currentSymptoms));
+            formData.append('answers', JSON.stringify(answers));
+
+            showStatus('🔄 Generating Gemma3 report from your answers...', 'info');
+
+            try {
+                const response = await fetch(`${API_URL}/analyze-with-history`, { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('reportContent').textContent = data.patient_report;
+                    document.getElementById('chatbotSection').classList.add('hidden');
+                    document.getElementById('reportSection').classList.remove('hidden');
+                    showStatus(`✅ Report generated! (${data.qa_count} Q&A analyzed)`, 'success');
+                } else {
+                    showStatus(`❌ ${data.error || 'Report generation failed'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('❌ Connection error', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
